@@ -53,7 +53,31 @@ Once the setup and installation are complete, you can start the server:
 node server.js
 ```
 
-By default, the application will be running and accessible at `http://localhost:3000`. You will see a confirmation message in your console: `Server running on port 3000`.
+By default, the application will be running and accessible at `http://localhost:3000`. You will see a confirmation message in your console indicating the port it's running on (e.g., `Server running on port 3000`).
+
+### Environment Variables
+
+You can customize the server's host and port using environment variables:
+
+*   **`PORT`**:
+    *   Controls the port on which the server listens.
+    *   Defaults to `3000` if not set.
+    *   Example: `PORT=8080 node server.js`
+
+*   **`HOST`**:
+    *   Determines the hostname used in the generated short URLs. This is useful if the application is behind a reverse proxy or you want to enforce a specific domain.
+    *   If not set, the application will attempt to use the `Host` header from the incoming HTTP request.
+    *   If the `Host` header is also unavailable, it defaults to `localhost`.
+    *   Example: `HOST=my-url-shortener.com node server.js`
+
+You can use them together:
+
+```bash
+HOST=my-url-shortener.com PORT=80 node server.js
+```
+This would make the server listen on port 80 and generate short URLs like `http://my-url-shortener.com/xxxxxx`.
+
+If only `HOST` is provided (e.g., `HOST=my-custom-domain.com node server.js`), the server will use the default port `3000` (or the port from `req.headers.host` if available for listening, though typically `PORT` env var takes precedence for listening port). The generated URLs will use `my-custom-domain.com`.
 
 ## How to Use
 
