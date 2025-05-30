@@ -1,10 +1,10 @@
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const crypto = require('crypto');
-const path = require('path'); // Added path module
+const path = require('path');
 
 const app = express();
-const port = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000; // Changed variable name and used PORT
 
 // Connect to the SQLite database
 const db = new sqlite3.Database('./database.sqlite', (err) => {
@@ -78,9 +78,20 @@ app.post('/shorten', async (req, res) => {
         console.error('Error inserting URL into database:', err.message);
         return res.status(500).json({ error: 'Failed to shorten URL' });
       }
-      // Construct the short URL. Using req.protocol and req.get('host') for flexibility.
-      const shortUrlBase = `${req.protocol}://${req.get('host')}`;
-      res.status(201).json({ short_url: `${shortUrlBase}/${short_code}` });
+
+      const protocol = 'http'; // As per requirements, hardcode to http for now
+      // Determine hostname: use HOST env var, then request host header, then fallback to 'localhost'
+      const hostname = process.env.HOST || req.headers.host || 'localhost';
+      // Determine port string: include only if not standard port 80 for http or 443 for https
+      // For this task, we will always include the PORT if it's not 80 for http.
+      // process.env.PORT is a string, PORT variable is a number.
+      const currentPort = parseInt(process.env.PORT || '3000', 10); // Ensure PORT is number for comparison
+      const portString = (currentPort === 80 && protocol === 'http') ? '' : `:${currentPort}`;
+
+      const baseUrl = `${protocol}://${hostname.replace(/:\d+$/, '')}${portString}`; // Remove existing port from hostname if present
+      const fullShortUrl = `${baseUrl}/${short_code}`;
+
+      res.status(201).json({ short_url: fullShortUrl });
     });
   } catch (dbError) {
     console.error('Database error during /shorten:', dbError.message);
@@ -114,8 +125,8 @@ app.get('/:short_code', (req, res) => {
 });
 
 // Basic server start
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+app.listen(PORT, () => { // Used PORT
+  console.log(`Server running on port ${PORT}`); // Used PORT
 });
 
 // Graceful shutdown
