@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Shortener</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        .container { max-width: 600px; margin: 40px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; }
+        form { display: flex; flex-direction: column; gap: 10px; }
+        input[type="url"] { padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; }
+        button[type="submit"] { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
+        button[type="submit"]:hover { background-color: #0056b3; }
+        #result { margin-top: 20px; padding: 10px; border-radius: 4px; }
+        #result.success { background-color: #e6ffed; border: 1px solid #b7ebc0; color: #257942; }
+        #result.error { background-color: #ffe6e6; border: 1px solid #f5c0c0; color: #a72626; }
+        #result a { color: #007bff; text-decoration: none; }
+        #result a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>URL Shortener</h1>
+        <form id="shortenForm">
+            <input type="url" id="longUrlInput" placeholder="Enter long URL" required>
+            <button type="submit">Shorten</button>
+        </form>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const shortenForm = document.getElementById('shortenForm');
+        const longUrlInput = document.getElementById('longUrlInput');
+        const resultDiv = document.getElementById('result');
+
+        shortenForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const longUrlValue = longUrlInput.value;
+            resultDiv.innerHTML = ''; // Clear previous results
+            resultDiv.className = ''; // Clear previous styling
+
+            if (!longUrlValue) {
+                resultDiv.textContent = 'Please enter a URL.';
+                resultDiv.className = 'error';
+                return;
+            }
+
+            try {
+                const response = await fetch('/shorten', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ long_url: longUrlValue }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const shortUrlLink = document.createElement('a');
+                    shortUrlLink.href = data.short_url;
+                    shortUrlLink.textContent = data.short_url;
+                    shortUrlLink.target = '_blank'; // Open in new tab
+
+                    resultDiv.textContent = 'Shortened URL: ';
+                    resultDiv.appendChild(shortUrlLink);
+                    resultDiv.className = 'success';
+                } else {
+                    resultDiv.textContent = `Error: ${data.error || 'Failed to shorten URL.'}`;
+                    resultDiv.className = 'error';
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                resultDiv.textContent = 'An error occurred. Please check the console or try again.';
+                resultDiv.className = 'error';
+            }
+        });
+    </script>
+</body>
+</html>
